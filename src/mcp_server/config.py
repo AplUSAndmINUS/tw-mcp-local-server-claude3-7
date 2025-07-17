@@ -36,7 +36,18 @@ class Settings(BaseSettings):
     
     # Plugin Configuration
     plugins_directory: str = Field(default="plugins", description="Directory containing plugins")
-    enabled_plugins: List[str] = Field(default_factory=lambda: ["vibe_coder"], description="List of enabled plugins")
+    enabled_plugins: List[str] = Field(
+        default_factory=lambda: [
+            "vibe_coder", "brainstorm", "mindmap", "perspective_shift", "creativity_surge",
+            "image_seed", "palette_gen", "render_style", "sketch_flow",
+            "motion_branding", "vibe_fade", "loop_craft", "tempo_sync",
+            "llm_dictation", "api_testbed", "query_refine", "agent_weave",
+            "writing_muse", "composition_sculpt", "edit_pass", "persona_writer",
+            "tone_builder", "beat_vibe", "soundscape", "voiceflow",
+            "voice_capture", "intent_echo", "speech_craft", "command_stream"
+        ], 
+        description="List of enabled plugins"
+    )
     
     # Security Configuration
     secret_key: str = Field(default="your-secret-key-change-this", description="Secret key for JWT tokens")
@@ -55,6 +66,36 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_requests: int = Field(default=100, description="Rate limit requests per minute")
     rate_limit_window: int = Field(default=60, description="Rate limit window in seconds")
+    
+    # Hybrid Computing Configuration
+    hybrid_computing_enabled: bool = Field(default=True, description="Enable hybrid local/cloud computing")
+    prefer_local_execution: bool = Field(default=True, description="Prefer local execution when possible")
+    local_cpu_threshold: float = Field(default=0.8, description="CPU threshold for local execution")
+    local_memory_threshold: float = Field(default=0.85, description="Memory threshold for local execution")
+    
+    # Azure Cloud Configuration
+    azure_enabled: bool = Field(default=False, description="Enable Azure cloud integration")
+    azure_subscription_id: Optional[str] = Field(default=None, description="Azure subscription ID")
+    azure_tenant_id: Optional[str] = Field(default=None, description="Azure tenant ID")
+    azure_client_id: Optional[str] = Field(default=None, description="Azure client ID")
+    azure_client_secret: Optional[str] = Field(default=None, description="Azure client secret")
+    azure_resource_group: str = Field(default="mcp-resources", description="Azure resource group")
+    azure_functions_key: Optional[str] = Field(default=None, description="Azure Functions key")
+    
+    # Windows-specific Configuration
+    windows_optimizations: bool = Field(default=True, description="Enable Windows-specific optimizations")
+    windows_service_mode: bool = Field(default=False, description="Run as Windows service")
+    windows_gpu_priority: bool = Field(default=True, description="Prioritize GPU usage on Windows")
+    
+    # MCP Module Configuration
+    mcp_modules_enabled: bool = Field(default=True, description="Enable MCP modules")
+    mcp_ideation_enabled: bool = Field(default=True, description="Enable ideation modules")
+    mcp_visual_enabled: bool = Field(default=True, description="Enable visual generation modules")
+    mcp_animation_enabled: bool = Field(default=True, description="Enable animation modules")
+    mcp_audio_enabled: bool = Field(default=True, description="Enable audio modules")
+    mcp_voice_enabled: bool = Field(default=True, description="Enable voice modules")
+    mcp_writing_enabled: bool = Field(default=True, description="Enable writing modules")
+    mcp_testing_enabled: bool = Field(default=True, description="Enable testing modules")
     
     class Config:
         env_file = ".env"

@@ -22,6 +22,8 @@ from pydantic import BaseModel
 from .config import Settings, load_settings
 from .claude_client import ClaudeClient, ClaudeResponse
 from .plugins import PluginRegistry
+from .hybrid_compute import HybridComputeManager
+from .azure_integration import AzureIntegration
 
 # Configure structured logging
 structlog.configure(
@@ -103,6 +105,8 @@ class MCPServer:
         self.settings = settings or load_settings()
         self.claude_client = ClaudeClient(self.settings)
         self.plugin_registry = PluginRegistry(self.settings)
+        self.hybrid_compute = HybridComputeManager(self.settings)
+        self.azure_integration = AzureIntegration(self.settings) if self.settings.azure_enabled else None
         self.app = self._create_app()
         
         # Rate limiting storage (in production, use Redis or similar)
@@ -117,6 +121,22 @@ class MCPServer:
             # Startup
             logger.info("Starting MCP Server...")
             await self.plugin_registry.load_plugins()
+            
+            # Initialize hybrid computing
+            if self.settings.hybrid_computing_enabled:
+                await self.hybrid_compute.get_current_resources()
+                logger.info("Hybrid computing initialized")
+            
+            # Initialize Azure integration
+            if self.azure_integration:
+                await self.azure_integration.authenticate()
+                logger.info("Azure integration initialized")
+            
+            # Apply Windows optimizations if enabled
+            if self.settings.windows_optimizations:
+                await self.hybrid_compute.optimize_for_windows()
+                logger.info("Windows optimizations applied")
+            
             logger.info("MCP Server started successfully")
             
             yield
@@ -124,6 +144,12 @@ class MCPServer:
             # Shutdown
             logger.info("Shutting down MCP Server...")
             await self.plugin_registry.shutdown_plugins()
+            
+            # Cleanup Azure integration
+            if self.azure_integration:
+                await self.azure_integration.cleanup_resources()
+                logger.info("Azure integration cleaned up")
+            
             logger.info("MCP Server shutdown complete")
         
         app = FastAPI(
@@ -282,7 +308,73 @@ class MCPServer:
                 "temperature": self.settings.temperature,
                 "enabled_plugins": self.settings.enabled_plugins,
                 "log_level": self.settings.log_level,
+                "hybrid_computing_enabled": self.settings.hybrid_computing_enabled,
+                "azure_enabled": self.settings.azure_enabled,
+                "windows_optimizations": self.settings.windows_optimizations,
+                "mcp_modules_enabled": self.settings.mcp_modules_enabled,
             }
+        
+        @app.get("/system/status")
+        async def get_system_status():
+            """Get comprehensive system status."""
+            try:
+                # Get hybrid computing status
+                hybrid_status = await self.hybrid_compute.get_system_status()
+                
+                # Get Azure status if enabled
+                azure_status = {}
+                if self.azure_integration:
+                    azure_status = await self.azure_integration.get_service_status()
+                
+                # Get plugin status
+                plugin_status = {
+                    "loaded_plugins": len(self.plugin_registry.get_all_plugins()),
+                    "active_plugins": [
+                        plugin.metadata.name for plugin in self.plugin_registry.get_all_plugins().values()
+                        if plugin.is_enabled()
+                    ]
+                }
+                
+                return {
+                    "server_status": "running",
+                    "hybrid_computing": hybrid_status,
+                    "azure_integration": azure_status,
+                    "plugins": plugin_status,
+                    "timestamp": time.time()
+                }
+                
+            except Exception as e:
+                logger.error(f"Error getting system status: {e}")
+                return {
+                    "server_status": "error",
+                    "error": str(e),
+                    "timestamp": time.time()
+                }
+        
+        @app.post("/system/optimize")
+        async def optimize_system():
+            """Trigger system optimization."""
+            try:
+                # Apply Windows optimizations
+                if self.settings.windows_optimizations:
+                    await self.hybrid_compute.optimize_for_windows()
+                
+                # Update resource thresholds based on current usage
+                current_resources = await self.hybrid_compute.get_current_resources()
+                
+                return {
+                    "message": "System optimization completed",
+                    "current_resources": {
+                        "cpu_percent": current_resources.cpu_percent,
+                        "memory_percent": current_resources.memory_percent,
+                        "gpu_percent": current_resources.gpu_percent,
+                    },
+                    "timestamp": time.time()
+                }
+                
+            except Exception as e:
+                logger.error(f"Error optimizing system: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
     
     async def _rate_limit_middleware(self, request: Request, call_next) -> Response:
         """Rate limiting middleware."""
