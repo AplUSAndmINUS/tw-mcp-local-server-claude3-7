@@ -144,6 +144,40 @@ A comprehensive Python MCP (Model Context Protocol) server implementation with C
 -   Azure AI Services
 -   Azure Orchestration (Durable Functions)
 
+### 🔑 Getting Your Claude 3.7 Sonnet API Key
+
+Before installation, you'll need an Anthropic API key to access Claude 3.7 Sonnet:
+
+1. **Sign up for Anthropic Console**:
+   - Visit [console.anthropic.com](https://console.anthropic.com/)
+   - Create an account or sign in with your existing account
+
+2. **Verify your account**:
+   - Complete email verification if required
+   - You may need to provide a phone number for verification
+
+3. **Add billing information**:
+   - Navigate to "Billing" in the console
+   - Add a payment method (credit card required)
+   - Claude 3.7 Sonnet uses pay-per-use pricing
+
+4. **Generate your API key**:
+   - Go to "API Keys" in the left sidebar
+   - Click "Create Key"
+   - Give your key a descriptive name (e.g., "MCP Local Server")
+   - Copy the generated key immediately (you won't be able to see it again)
+
+5. **Important notes**:
+   - **Keep your API key secure**: Never commit it to version control
+   - **Monitor usage**: Check your usage in the Anthropic Console regularly
+   - **Rate limits**: Be aware of API rate limits for your account tier
+   - **Pricing**: Claude 3.7 Sonnet pricing is based on input/output tokens
+
+6. **Pricing reference** (as of July 2025):
+   - Input tokens: ~$3.00 per million tokens
+   - Output tokens: ~$15.00 per million tokens
+   - Prices may vary; check [Anthropic's pricing page](https://www.anthropic.com/pricing) for current rates
+
 ### Installation
 
 Choose your preferred deployment method:
