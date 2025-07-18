@@ -146,28 +146,47 @@ A comprehensive Python MCP (Model Context Protocol) server implementation with C
 
 ### Installation
 
-1. **Clone the repository**:
+Choose your preferred deployment method:
 
-    ```bash
+#### 🖥️ Local Windows Installation
+
+1. **Prerequisites**:
+
+    - Python 3.9 or higher
+    - Git for Windows
+    - PowerShell 5.1 or higher
+    - Visual Studio Build Tools (for some Python packages)
+
+2. **Clone and setup**:
+
+    ```powershell
     git clone https://github.com/AplUSAndmINUS/tw-mcp-local-server-claude3-7.git
     cd tw-mcp-local-server-claude3-7
     ```
 
-2. **Run the automated setup**:
+3. **Create virtual environment**:
 
-    ```bash
-    python scripts/setup.py
+    ```powershell
+    python -m venv venv
+    .\venv\Scripts\Activate.ps1
     ```
 
-3. **Configure your environment**:
+4. **Install dependencies**:
 
-    ```bash
-    # Copy and edit the configuration file
-    cp .env.example .env
-    # Edit .env with your settings
+    ```powershell
+    pip install -e .
+    pip install -r requirements.txt
     ```
 
-4. **Essential Configuration**:
+5. **Configure environment**:
+
+    ```powershell
+    copy .env.example .env
+    # Edit .env with your settings using notepad or your preferred editor
+    notepad .env
+    ```
+
+6. **Essential Windows Configuration**:
 
     ```env
     # Claude API
@@ -177,24 +196,256 @@ A comprehensive Python MCP (Model Context Protocol) server implementation with C
     HYBRID_COMPUTING_ENABLED=true
     PREFER_LOCAL_EXECUTION=true
 
-    # Azure Integration (Optional)
-    AZURE_ENABLED=false
-    AZURE_SUBSCRIPTION_ID=your-subscription-id
-
     # Windows Optimizations
     WINDOWS_OPTIMIZATIONS=true
     WINDOWS_GPU_PRIORITY=true
+
+    # Azure Integration (Optional)
+    AZURE_ENABLED=false
     ```
 
-5. **Start the server**:
+7. **Start the server**:
+
+    ```powershell
+    mcp-server run
+    ```
+
+8. **Install as Windows Service** (Optional):
+    ```powershell
+    python scripts/windows_service.py install
+    python scripts/windows_service.py start
+    ```
+
+#### 🐧 Local Linux Installation
+
+1. **Prerequisites**:
+
+    ```bash
+    # Ubuntu/Debian
+    sudo apt update
+    sudo apt install python3 python3-pip python3-venv git build-essential
+
+    # CentOS/RHEL
+    sudo yum install python3 python3-pip git gcc gcc-c++ make
+
+    # Alpine Linux
+    sudo apk add python3 python3-dev py3-pip git build-base
+    ```
+
+2. **Clone and setup**:
+
+    ```bash
+    git clone https://github.com/AplUSAndmINUS/tw-mcp-local-server-claude3-7.git
+    cd tw-mcp-local-server-claude3-7
+    ```
+
+3. **Create virtual environment**:
+
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+4. **Install dependencies**:
+
+    ```bash
+    pip install -e .
+    pip install -r requirements.txt
+    ```
+
+5. **Configure environment**:
+
+    ```bash
+    cp .env.example .env
+    # Edit .env with your settings
+    nano .env  # or vim, gedit, etc.
+    ```
+
+6. **Essential Linux Configuration**:
+
+    ```env
+    # Claude API
+    ANTHROPIC_API_KEY=your-api-key-here
+
+    # Hybrid Computing
+    HYBRID_COMPUTING_ENABLED=true
+    PREFER_LOCAL_EXECUTION=true
+
+    # Linux Optimizations
+    WINDOWS_OPTIMIZATIONS=false
+    WINDOWS_GPU_PRIORITY=false
+
+    # Azure Integration (Optional)
+    AZURE_ENABLED=false
+    ```
+
+7. **Start the server**:
 
     ```bash
     mcp-server run
     ```
 
-6. **Verify installation**:
+8. **Install as systemd service** (Optional):
+    ```bash
+    # Create service file
+    sudo cp scripts/mcp-server.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable mcp-server
+    sudo systemctl start mcp-server
+    ```
+
+#### ☁️ Azure Cloud Deployment
+
+1. **Prerequisites**:
+
+    - Azure CLI installed and configured
+    - Azure subscription with appropriate permissions
+    - Docker (for containerized deployment)
+
+2. **Login to Azure**:
+
+    ```bash
+    az login
+    az account set --subscription "your-subscription-id"
+    ```
+
+3. **Clone and prepare**:
+
+    ```bash
+    git clone https://github.com/AplUSAndmINUS/tw-mcp-local-server-claude3-7.git
+    cd tw-mcp-local-server-claude3-7
+    ```
+
+4. **Option A: Azure Container Instances (Simplest)**:
+
+    ```bash
+    # Create resource group
+    az group create --name mcp-server-rg --location eastus
+
+    # Create container instance
+    az container create \
+      --resource-group mcp-server-rg \
+      --name mcp-server \
+      --image python:3.11-slim \
+      --cpu 2 \
+      --memory 4 \
+      --ports 8000 \
+      --environment-variables \
+        ANTHROPIC_API_KEY="your-api-key-here" \
+        HYBRID_COMPUTING_ENABLED=true \
+        AZURE_ENABLED=true \
+      --command-line "pip install -e . && mcp-server run --host 0.0.0.0"
+    ```
+
+5. **Option B: Azure App Service (Recommended)**:
+
+    ```bash
+    # Create App Service plan
+    az appservice plan create \
+      --name mcp-server-plan \
+      --resource-group mcp-server-rg \
+      --sku B1 \
+      --is-linux
+
+    # Create web app
+    az webapp create \
+      --resource-group mcp-server-rg \
+      --plan mcp-server-plan \
+      --name mcp-server-app \
+      --runtime "PYTHON|3.11"
+
+    # Configure app settings
+    az webapp config appsettings set \
+      --resource-group mcp-server-rg \
+      --name mcp-server-app \
+      --settings \
+        ANTHROPIC_API_KEY="your-api-key-here" \
+        HYBRID_COMPUTING_ENABLED=true \
+        AZURE_ENABLED=true \
+        WEBSITES_PORT=8000
+
+    # Deploy code
+    az webapp deployment source config \
+      --resource-group mcp-server-rg \
+      --name mcp-server-app \
+      --repo-url https://github.com/AplUSAndmINUS/tw-mcp-local-server-claude3-7 \
+      --branch master \
+      --manual-integration
+    ```
+
+6. **Option C: Azure Functions (Serverless)**:
+
+    ```bash
+    # Create Function App
+    az functionapp create \
+      --resource-group mcp-server-rg \
+      --consumption-plan-location eastus \
+      --runtime python \
+      --runtime-version 3.11 \
+      --functions-version 4 \
+      --name mcp-server-func \
+      --storage-account mcpserverstorage
+
+    # Deploy using Azure Functions Core Tools
+    func azure functionapp publish mcp-server-func
+    ```
+
+7. **Configure Azure-specific settings**:
+
+    ```env
+    # Azure optimizations
+    AZURE_ENABLED=true
+    AZURE_SUBSCRIPTION_ID=your-subscription-id
+    AZURE_RESOURCE_GROUP=mcp-server-rg
+
+    # Hybrid computing for cloud
+    HYBRID_COMPUTING_ENABLED=true
+    PREFER_LOCAL_EXECUTION=false
+
+    # Security
+    CORS_ORIGINS=["https://yourdomain.com"]
+    ```
+
+8. **Verify deployment**:
+    ```bash
+    # Test the deployment
+    curl https://your-app-name.azurewebsites.net/health
+    ```
+
+#### 🔧 Post-Installation Verification
+
+For all deployment methods, verify your installation:
+
+1. **Check server health**:
+
+    ```bash
+    curl http://localhost:8000/health  # Local deployments
+    curl https://your-app.azurewebsites.net/health  # Azure deployments
+    ```
+
+2. **Test basic functionality**:
+
+    ```bash
+    # Test vibe coding
+    curl -X POST "http://localhost:8000/vibe-code" \
+      -H "Content-Type: application/json" \
+      -d '{"request": "Hello, can you help me with Python?", "context": {"mood": "curious"}}'
+    ```
+
+3. **Run integration tests**:
+
     ```bash
     python tests/test_integration.py
+    ```
+
+4. **Monitor logs**:
+
+    ```bash
+    # Local deployments
+    tail -f logs/mcp-server.log
+
+    # Azure deployments
+    az webapp log tail --resource-group mcp-server-rg --name mcp-server-app
     ```
 
 ## 🎯 Usage Examples
